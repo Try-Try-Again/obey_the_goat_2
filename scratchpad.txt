@@ -1,7 +1,17 @@
-CONTINUED ON: A FOREIGN KEY RELATIONSHIP chapter 7
+CONTINUED ON: ch07l036-2
 
-- Adjust model so that items are associated with different lists
-- Add unique URLs for each list
 - Add URLs for adding a new item to an existing list via POST
+- Refactor away some duplication in urls.py
 
 *our multi user FT is posting as soon as its loaded and fails early figure out why
+
+*re_path(r'lists/(.+)/$', views.view_list, name='view_list'),
+	          ^ This capture group magically ends up as an arguemnet for whatever view it points to. Neat!
+
+* as soon as your test goes green:
+	- clean up the tested code as much as you can
+	- if your test method has changed to test something new and different,
+	  put it in a new and different testcase class
+	  *Do the same for both UT's and FT's
+
+
