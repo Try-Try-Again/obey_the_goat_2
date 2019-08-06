@@ -13,5 +13,3 @@ CONTINUED ON: ch07l036-2
 	- if your test method has changed to test something new and different,
 	  put it in a new and different testcase class
 	  *Do the same for both UT's and FT's
-
-
