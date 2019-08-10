@@ -1,4 +1,7 @@
-CONTINUED ON: ch07l036-2
+CONTINUED ON: Testing Deployment
+we need to add our server's private key to GH's list
+	we need to create a ssh key on our server
+
 
 - Add URLs for adding a new item to an existing list via POST
 - Refactor away some duplication in urls.py
@@ -6,10 +9,26 @@ CONTINUED ON: ch07l036-2
 *our multi user FT is posting as soon as its loaded and fails early figure out why
 
 *re_path(r'lists/(.+)/$', views.view_list, name='view_list'),
-	          ^ This capture group magically ends up as an arguemnet for whatever view it points to. Neat!
+	              ^ This capture group magically ends up as an arguemnet
+				    for whatever view it points to. Neat!
 
 * as soon as your test goes green:
 	- clean up the tested code as much as you can
 	- if your test method has changed to test something new and different,
 	  put it in a new and different testcase class
 	  *Do the same for both UT's and FT's
+
+Shipping:
+after you go through the TDD loop enough and your project is at the point where
+'someone' could use it, its time to put it online
+
+- fire up a VM somewhere
+- your playbook will contain all the things that need to be done server side.
+  Review and revise the playbook often to ensure the site remains safe and reliable
+
+- you can run a test server on 8000 like this:
+  ./virtualenv/bin/python manage.py runserver 0.0.0.0:8000
+  the site this now online with only a wimpy test server
+
+* Not sure when static was supposed to be ignored, but now it's showing up server side.
+  we'll have to go back and find out how and when it should have been ignored
