@@ -1,4 +1,6 @@
 CONTINUED ON: Testing Deployment
+we need to pay DO
+log into DO
 we need to add our server's private key to GH's list
 	we need to create a ssh key on our server
 
@@ -32,3 +34,9 @@ after you go through the TDD loop enough and your project is at the point where
 
 * Not sure when static was supposed to be ignored, but now it's showing up server side.
   we'll have to go back and find out how and when it should have been ignored
+
+* pain points
+  - networking
+  - ports
+  - static files
+  - database
