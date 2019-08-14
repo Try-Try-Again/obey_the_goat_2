@@ -1,0 +1,26 @@
+---
+
+- name: Prepare Server for Ansible
+  hosts: new_server
+  gather_facts: False
+  remote_user: root
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - prepare_target
+
+- name: Setup Basic Security
+  hosts: new_server
+  remote_user: root
+  roles:
+    - setup_security
+
+      #- name: Provision Server
+      #  hosts:
+      #    - live
+      #    - staging
+      #  vars:
+      #    host: "{{ inventory_hostname }}"
+      #  roles:
+      #    - provision_nginx_gunicorn

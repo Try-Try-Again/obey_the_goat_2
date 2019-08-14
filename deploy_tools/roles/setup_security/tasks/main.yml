@@ -1,0 +1,136 @@
+---
+
+- name: Setup Root User
+  user:
+    name: root
+    update_password: always
+    password: "{{ root_pass | password_hash('sha512') }}"
+    state: present
+
+- name: Setup Deploy User
+  user:
+    name: deploy
+    update_password: always
+    password: "{{ deploy_pass | password_hash('sha512') }}"
+    shell: /bin/bash
+    state: present
+
+#after we get the rest of this working we'll put our private key in a
+#vault and use that instead. At this point we'll have to change this to reflect
+#the new location
+- name: give deploy ssh key
+  authorized_key:
+    user: deploy
+    exclusive: no
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    state: present
+
+- name: configure sudoers
+  template:
+    src: sudoers.j2
+    dest: /etc/sudoers
+    validate: 'visudo -cf %s'
+    mode: 0440
+
+- name: Install basic packages
+  apt:
+    pkg:
+      - aptitude
+      - vim
+      - curl
+      - tmux
+      - ranger
+      - tree
+      - fail2ban
+      - logwatch
+      - ufw
+      - nginx
+      - git
+      - python3-venv
+    state: present
+
+- name: Adjust APT update intervals
+  template:
+    src: apt_periodic
+    dest: /etc/apt/apt.conf.d/10periodic
+    owner: root
+    mode: 0644
+
+- name: Setup ufw
+  ufw:
+    state: enabled
+    direction: incoming
+    policy: deny
+
+- name: Allow SSH traffic
+  ufw:
+    port: 22
+    proto: tcp
+    from_ip: "{{ my_ip }}"
+    rule: allow
+
+- name: Allow HTTP traffic
+  ufw:
+    proto: tcp
+    port: 80
+    rule: allow
+
+- name: Allow SSL traffic
+  ufw:
+    proto: tcp
+    port: 443
+    rule: allow
+
+- name: Email log summary daily
+  lineinfile:
+    path: /etc/cron.daily/00logwatch
+    regexp: "^/usr/sbin/logwatch"
+    line: "/usr/sbin/logwatch --output mail --mailto {{ UBUNTU_COMMON_LOGWATCH_EMAIL }} --detail high"
+    state: present
+    create: yes
+
+- name: Ensure .ssh directory exists.
+  file:
+    dest: /home/deploy/.ssh
+    mode: 0700
+    owner: deploy
+    state: directory
+
+- name: Install ssh key
+  template:
+    src: id_rsa
+    dest: /home/deploy/.ssh/id_rsa
+    owner: deploy
+    mode: 0600
+
+- name: Change ssh port
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^Port\s'
+    line: "Port 22"
+    state: present
+  notify: Restart ssh
+
+- name: Disallow password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    state: present
+  notify: Restart ssh
+
+- name: Disallow root SSH access
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+    state: present
+  notify: Restart ssh
+
+- name: Allow deploy user
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^AllowUsers"
+    line: "AllowUsers deploy@{{ my_ip }}"
+    state: present
+  notify: Restart ssh

@@ -1,0 +1,147 @@
+#IDEA:
+#we'll have the deploy script pull from a 'staging' branch
+#and have the live site pull from the master branch
+
+#DANGER AREAS
+#Static Files usually need special configuration on the webserver
+#Database permission and path issues
+#Dependencies
+
+#SOLUTIONS
+#use a staging site that uses identical infrastructure as your live site
+#run functional tests against your staging site
+#run site on a virtual env
+#automate deployment
+
+#CLONING IN OUR GIT REPO
+#save your github url for your superlists repo in your group_vars
+
+#PLAYBOOK PLAN
+#*we should run this script against our staging site first
+# then, after we have it working, we should run a similar script.
+# the only difference should be that we clone the staging repo to the
+# live repo - not from our git repo - that way we are sure that whatever we got
+# working is what is deployed to our live server - no matter what stupidy happens
+# in our repo
+#
+# create a handler to chown errthang in sites to be owned by deploy
+---
+
+- name: Create Database Directory
+  file:
+    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/database
+    state: directory
+    recurse: yes
+    owner: deploy
+    group: deploy
+  become: yes
+  become_user: deploy
+
+- name: Create Static Directory
+  file:
+    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/static
+    state: directory
+    recurse: yes
+    owner: deploy
+    group: deploy
+  become: yes
+  become_user: deploy
+
+- name: Create Virtualenv Directory
+  file:
+    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/virtualenv
+    state: directory
+    recurse: yes
+    owner: deploy
+    group: deploy
+    #become: yes
+    #become_user: deploy
+
+    #- name: Check For Existing Git Repo
+    #  stat:
+    #    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/.git
+    #  register: repo_exists
+
+- name: Create Python Virutal Environment
+  command: python3.6 -m venv /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/virtualenv
+  become: yes
+  become_user: deploy
+
+- name: Clone Git Repo
+  git:
+    repo: '{{ git_repo }}'
+    version: master
+    dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source
+    accept_hostkey: yes
+    key_file: /home/deploy/.ssh/id_rsa
+    update: yes
+    force: yes
+  become: yes
+  become_user: deploy
+  notify:
+    - restart gunicorn
+
+- name: Install Required Python Packages
+  command: "{{ project_dir }}/virtualenv/bin/pip install -r {{ project_dir }}/source/requirements.txt"
+  become: yes
+  become_user: deploy
+
+- name: Add Project To Allowed Hosts
+  lineinfile:
+    dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/{{ project_name }}/settings.py
+    regexp: 'ALLOWED_HOSTS =.+$'
+    line: 'ALLOWED_HOSTS = ["{{ sub_domain }}.{{ domain_name }}"]'
+    state: present
+
+- name: Disable Debug Mode
+  lineinfile:
+    dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/{{ project_name }}/settings.py
+    regexp: '^DEBUG =.+$'
+    line: 'DEBUG = False'
+    state: present
+
+- name: Add Random Secret Key
+  lineinfile:
+    dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/{{ project_name }}/settings.py
+    regexp: '^SECRET_KEY =.+$'
+    line: "SECRET_KEY = '{{ secret_key }}'"
+    state: present
+
+- name: Collect Static Files
+  command: "{{ project_dir }}/virtualenv/bin/python {{ project_dir }}/source/manage.py collectstatic --noinput"
+  become: yes
+  become_user: deploy
+
+- name: Update Database
+  command: "{{ project_dir }}/virtualenv/bin/python {{ project_dir }}/source/manage.py migrate --noinput"
+  become: yes
+  become_user: deploy
+
+- name: allow long hostnames in nginx #move to configure role
+  lineinfile:
+    dest: /etc/nginx/nginx.conf
+    regexp: '(\s+)#? ?server_names_hash_bucket_size'
+    backrefs: yes
+    line: '\1server_names_hash_bucket_size 64;'
+
+- name: add nginx config to sites-available #move to configure role
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/sites-available/{{ host }}
+  notify:
+    - restart nginx
+
+- name: add symlink in nginx sites-enabled #move to configure role
+  file:
+    src: /etc/nginx/sites-available/{{ host }}
+    dest: /etc/nginx/sites-enabled/{{ host }}
+    state: link
+  notify:
+    - restart nginx
+
+- name: write gunicorn service script #move to configure role
+  template:
+    src: gunicorn.service
+    dest: /etc/systemd/system/gunicorn-{{ host }}.service
+  notify:
+    - restart gunicorn

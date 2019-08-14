@@ -1,0 +1,7 @@
+git fetch --hard-reset if the repo is already on our server.
+if we do it that way, we will have run configuration roles
+every time to make sure debug mode is off and that we have a new SALT key
+
+Ultimately, everything should be automated, and that includes spinning up brand
+new servers and ensuring they have all the right software installed. This will
+involve interacting with the API of your hosting provider.
