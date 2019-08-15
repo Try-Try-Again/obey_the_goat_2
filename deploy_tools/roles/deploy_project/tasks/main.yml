@@ -25,9 +25,31 @@
 # in our repo
 #
 # create a handler to chown errthang in sites to be owned by deploy
+#run 'first 5 first'
+
+#1. GET LATEST APP SOURCE
+#	git fetch/clone from source repo
+#
+
+#2. CREATE OR UPDATE .ENV
+#	ensure a venv exists
+#	run bin/pip install -r requirements.txt
+
+#3. UPDATE VIRTUALENV
+#	*Harry's script adds stuff to .env with append()
+#	I'd rather use my version of creating a .env file
+#	with ansible
+
+#4. UPDATE STATIC FILES
+#	manage.py collectstatic --noinput
+
+
+#5. UPDATE DATABASES
+#	manage.py migrate --noinput
+
 ---
 
-- name: Create Database Directory
+- name: Create Database Directory #5
   file:
     path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/database
     state: directory
@@ -37,7 +59,7 @@
   become: yes
   become_user: deploy
 
-- name: Create Static Directory
+- name: Create Static Directory #4
   file:
     path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/static
     state: directory
@@ -47,7 +69,7 @@
   become: yes
   become_user: deploy
 
-- name: Create Virtualenv Directory
+- name: Create Virtualenv Directory #2
   file:
     path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/virtualenv
     state: directory
@@ -62,12 +84,12 @@
     #    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/.git
     #  register: repo_exists
 
-- name: Create Python Virutal Environment
+- name: Create Python Virutal Environment #2
   command: python3.6 -m venv /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/virtualenv
   become: yes
   become_user: deploy
 
-- name: Clone Git Repo
+- name: Clone Git Repo #1
   git:
     repo: '{{ git_repo }}'
     version: master
@@ -81,38 +103,38 @@
   notify:
     - restart gunicorn
 
-- name: Install Required Python Packages
+- name: Install Required Python Packages #3
   command: "{{ project_dir }}/virtualenv/bin/pip install -r {{ project_dir }}/source/requirements.txt"
   become: yes
   become_user: deploy
 
-- name: Add Project To Allowed Hosts
+- name: Add Project To Allowed Hosts #? Leave it for now
   lineinfile:
     dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/{{ project_name }}/settings.py
     regexp: 'ALLOWED_HOSTS =.+$'
     line: 'ALLOWED_HOSTS = ["{{ sub_domain }}.{{ domain_name }}"]'
     state: present
 
-- name: Disable Debug Mode
+- name: Disable Debug Mode #yes this too
   lineinfile:
     dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/{{ project_name }}/settings.py
     regexp: '^DEBUG =.+$'
     line: 'DEBUG = False'
     state: present
 
-- name: Add Random Secret Key
+- name: Add Random Secret Key #Probs not best practice, but we'll get refactoring this after we do TDD
   lineinfile:
     dest: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/source/{{ project_name }}/settings.py
     regexp: '^SECRET_KEY =.+$'
     line: "SECRET_KEY = '{{ secret_key }}'"
     state: present
 
-- name: Collect Static Files
+- name: Collect Static Files #4
   command: "{{ project_dir }}/virtualenv/bin/python {{ project_dir }}/source/manage.py collectstatic --noinput"
   become: yes
   become_user: deploy
 
-- name: Update Database
+- name: Update Database #5
   command: "{{ project_dir }}/virtualenv/bin/python {{ project_dir }}/source/manage.py migrate --noinput"
   become: yes
   become_user: deploy

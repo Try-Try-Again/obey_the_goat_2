@@ -1,0 +1,7 @@
+This is a checklist of things we need in our ansible playbook.
+1. get latest source
+	- git fetch/clone?
+2. create or update virtualenv
+3. update virtualenv
+4. update static files
+5. update database

@@ -1,11 +1,40 @@
-Find out what unset does
-CONTINUED ON: Testing Deployment
-we need to pay DO
-log into DO
-we need to add our server's private key to GH's list
-	we need to create a ssh key on our server
+RULE #1
+Dont Repat Yourself
+
+RULE #2
+Do Nothing Without a Test
+
+RULE #3
+Do Easy
+
+my to-do's
+- mute all the tasks not applicable to current project
+- change info in the vault files
+- add new rsa_id.pub to github repo
+
+playbook requirements:
+run 'first 5 first'
+1. get latest app source
+	git fetch/clone from source repo
+
+2. create or update .env
+	ensure a venv exists
+	run bin/pip install -r requirements.txt
+3. update virtualenv
+	*Harry's script adds stuff to .env with append()
+	I'd rather use my version of creating a .env file
+	with ansible
+4. update static files
+	manage.py collectstatic --noinput
+
+5. update databases
+	manage.py migrate --noinput
 
 
+-What I Changed-
+
+
+-scratchpad-
 - Add URLs for adding a new item to an existing list via POST
 - Refactor away some duplication in urls.py
 
@@ -15,6 +44,7 @@ we need to add our server's private key to GH's list
 	              ^ This capture group magically ends up as an arguemnet
 				    for whatever view it points to. Neat!
 
+NOTES:
 * as soon as your test goes green:
 	- clean up the tested code as much as you can
 	- if your test method has changed to test something new and different,
@@ -41,3 +71,38 @@ after you go through the TDD loop enough and your project is at the point where
   - ports
   - static files
   - database
+
+Automation Goals
+Provision
+- install nginx, git, python3, python3-venv
+- add Nginx config file for virtual host
+- add a Systemd job for Gunicorn
+Deploy
+- create directory in ~/sites
+- Pull down source code
+- start virtualenv in virtualenv
+- pip install -r requirements.txt
+- manage.py migrate for database
+- collectstatic for static files
+- Restart Gunicorn job
+- Run FT's to check everything works
+
+
+development:
+FT's
+UT's
+app source code
+config files
+static files
+
+operations:
+ci (jenkins)
+playbooks
+playbook tests
+static files and templates
+docker files
+backup
+security
+
+We have a lot to do before a site is in a good spot.
+which means we DRY is in full effect
