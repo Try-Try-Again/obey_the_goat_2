@@ -8,7 +8,7 @@ RULE #3
 Do Easy
 
 my to-do's
-- mute all the tasks not applicable to current project
+- figure out how to assign ansible variables at runtime
 - change info in the vault files
 - add new rsa_id.pub to github repo
 
