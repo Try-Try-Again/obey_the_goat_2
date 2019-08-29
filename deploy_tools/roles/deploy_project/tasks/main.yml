@@ -59,15 +59,15 @@
   become: yes
   become_user: deploy
 
-- name: Create Static Directory #4
-  file:
-    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/static
-    state: directory
-    recurse: yes
-    owner: deploy
-    group: deploy
-  become: yes
-  become_user: deploy
+  #- name: Create Static Directory #Right now we're keeping the static dir inside our source dir change later
+  #  file:
+  #    path: /home/deploy/sites/{{ sub_domain }}.{{ domain_name }}/static
+  #    state: directory
+  #    recurse: yes
+  #    owner: deploy
+  #    group: deploy
+  #  become: yes
+  #  become_user: deploy
 
 - name: Create Virtualenv Directory #2
   file:
