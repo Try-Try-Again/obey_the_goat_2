@@ -7,7 +7,19 @@ Do Nothing Without a Test
 RULE #3
 Do Easy
 
-my to-do's
+-scratchpad-
+
+- Remove hardcoed URLs from views.py
+- Add URLs for adding a new item to an existing list via POST
+- Refactor away some duplication in urls.py
+
+*our multi user FT is posting as soon as its loaded and fails early figure out why
+
+*re_path(r'lists/(.+)/$', views.view_list, name='view_list'),
+	              ^ This capture group magically ends up as an arguemnet
+				    for whatever view it points to. Neat!
+
+personal to-do's
 - figure out how to assign ansible variables at runtime
 - change info in the vault files
 - add new rsa_id.pub to github repo
@@ -31,18 +43,6 @@ run 'first 5 first'
 	manage.py migrate --noinput
 
 
--What I Changed-
-
-
--scratchpad-
-- Add URLs for adding a new item to an existing list via POST
-- Refactor away some duplication in urls.py
-
-*our multi user FT is posting as soon as its loaded and fails early figure out why
-
-*re_path(r'lists/(.+)/$', views.view_list, name='view_list'),
-	              ^ This capture group magically ends up as an arguemnet
-				    for whatever view it points to. Neat!
 
 NOTES:
 * as soon as your test goes green:
