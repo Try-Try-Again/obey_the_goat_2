@@ -9,7 +9,8 @@ Do Easy
 
 -scratchpad-
 
-- Remove hardcoed URLs from views.py
+- Remove hardcoded URLs from views.py
+- Remove hardcoded URL form forms in list.html and home.html
 - Add URLs for adding a new item to an existing list via POST
 - Refactor away some duplication in urls.py
 
